@@ -11,7 +11,7 @@ I2C address and registers.
 
 ## License
 Released under the GNU Lesser General Public License, version 2.1. See
-license.txt for details.
+LICENSE.txt for details.
 
 ## Examples
 
