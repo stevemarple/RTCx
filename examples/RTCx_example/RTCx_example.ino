@@ -1,5 +1,32 @@
 /*
-
+ * Demonstrate the RTCx library.
+ *
+ * This sketch demonstrates the basic functionality of the RTCx
+ * library. It can also be used to adjust and check the frequency
+ * calibration settings on MCP7941x devices.
+ *
+ * On start-up the autoprobe feature is used to search the I2C bus to
+ * find the first available real-time clock. The sketch indicates
+ * which clock type (if any) has been found. If the clock is an
+ * MCP7941x device the current calibration setting is printed.
+ *
+ * The clock can be set by writing the current unixtime (i.e., seconds
+ * since 1970-01-01 00:00:00Z) prefixed by the character 'T' to
+ * Serial. The string must be terminated by a NULL character, line
+ * feed, or carriage return. E.g., "T1343779200" sets the clock to
+ * 2012-08-01 00:00:00Z".
+ *
+ * The clock error, measured in seconds, can be found in a similar way
+ * by sending the current unix time, prefixed by the character 'C',
+ * e.g., "C1343779200".
+ *
+ * It is possible to set the SQW output frequency by sending "M0" (1Hz
+ * output), "M1" (4096Hz output), "M2" (8192Hz output) or "M3"
+ * (32768Hz output). If the clock is a MCP7941x device then sending
+ * "M4" will enable the calibration mode and output a 64Hz signal
+ * which is continously compensated with the frequency calibration
+ * setting, thereby enabling the correct calibration value to be
+ * found.
  */
 
 #include <Wire.h>
@@ -91,40 +118,12 @@ void loop(void)
     printTm(Serial, &tm);
     Serial.print("unixtime = ");
     Serial.println(t);
-    /*
-    Serial.println("...............");
-    struct RTCx::tm tm2;
-    RTCx::time_t t2 = 1347750631;
-    Serial.print("unixtime = ");
-    Serial.println(t2);
-    RTCx::gmtime_r(&t2, &tm2);
-    printTm(Serial, &tm2);
-    RTCx::time_t t2a = RTCx::mktime(&tm2);
-    printTm(Serial, &tm2);
-    Serial.print("unixtime = ");
-    Serial.println(t2a);
-    Serial.println("...............");
-    */
-    /*
-    rtc.readClock(tm, RTCx::ALARM0);
-    printTm(Serial, &tm);
-    rtc.readClock(tm, RTCx::ALARM1);
-    printTm(Serial, &tm);
-    */
-    
-    /*
-      rtc.readClock(tm, RTCx::TIME_POWER_FAILED);
-      printTm(Serial, &tm);
-      rtc.readClock(tm, RTCx::TIME_POWER_RESTORED);
-      printTm(Serial, &tm);
-    */
-  
     Serial.println("-----");
   }
 
   while (Serial.available()) {
     char c = Serial.read();
-    if ((c == '\r' || c == '\n')) {
+    if ((c == '\r' || c == '\n' || c == '\0')) {
       if (bufPos <= bufLen && buffer[0] == 'C') {
 	// Check time error
 	buffer[bufPos] = '\0';
@@ -147,7 +146,44 @@ void loop(void)
 	printTm(Serial, &tm);
 	Serial.println("~~~~~");
       }
-
+      if (bufPos <= bufLen && buffer[0] == 'X') {
+	// Set calibration value
+	buffer[bufPos] = '\0';
+	if (rtc.getDevice() == RTCx::MCP7941x) {
+	  int8_t oldCal = rtc.getCalibration();
+	  char *endptr;
+	  long cal = strtol(&(buffer[1]), &endptr, 0);
+	  if (cal >= -127 && cal <= 127 && endptr == &buffer[bufPos]) {
+	    Serial.print("Previous calibration: ");
+	    Serial.println(oldCal, DEC);
+	    Serial.print("Calibration: ");
+	    Serial.println(cal, DEC);
+	      rtc.setCalibration(cal);
+	  }
+	  else 
+	    Serial.println("Bad value for calibration");
+	}
+	else {
+	  Serial.println("Cannot set calibration: not a MCP7941x");
+	}
+      }
+      if (bufPos <= bufLen && buffer[0] == 'M') {
+	// Set SQW mode
+	buffer[bufPos] = '\0';
+	  char *endptr;
+	  long mode = strtol(&(buffer[1]), &endptr, 0);
+	  if (mode >= RTCx::freq1Hz && mode <= RTCx::freqCalibration
+	      && endptr == &buffer[bufPos]) {
+	    if (rtc.setSQW((RTCx::freq_t)mode)) { 
+	      Serial.print("SQW: ");
+	      Serial.println(mode, DEC);
+	    }
+	    else
+	      Serial.println("Could not set SQW");
+	  }
+	  else 
+	    Serial.println("Bad value for SQW");
+      }
       bufPos = 0;
     }
     else if (bufPos < bufLen)
