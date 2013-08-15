@@ -384,8 +384,12 @@ void RTCx::clearVBAT(void) const
 
 int8_t RTCx::getCalibration(void) const
 {
-  if (device == MCP7941x)
-    return readData(0x08);
+  if (device == MCP7941x) {
+    // Convert from signed magnitude to two's complement.
+    uint8_t d = readData(0x08);
+    int8_t r = d & 0x7Fu;
+    return (d & 0x80u ? -r : r); 
+  }
   else
     return 0;
 }
@@ -394,7 +398,15 @@ int8_t RTCx::getCalibration(void) const
 bool RTCx::setCalibration(int8_t cal) const
 {
   if (device == MCP7941x) {
-    writeData(0x08, cal);
+    // Convert two's complement to signed magnitude.
+    if (cal == -128)
+      cal = -127; // Out of range, use next best value.
+    uint8_t d;
+    if (cal < 0)
+      d = 0x80u | (uint8_t)(-cal);
+    else
+      d = cal;
+    writeData(0x08, d);
     return true;
   }
   return false;
