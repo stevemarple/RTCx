@@ -1,7 +1,7 @@
 #ifndef RTCX_h
 #define RTCX_h
 
-#define RTCX_VERSION "0.0.1"
+#define RTCX_VERSION "1.0.0"
 
 #include <stdint.h>
 
