@@ -5,6 +5,11 @@
 #define SECS_PER_DAY 86400L
 #define SECS_PER_4_YEARS (SECS_PER_DAY * (366L + 365L + 365L + 365L))
 
+const uint8_t RTCx::DS1307Address = 0x68;
+const uint8_t RTCx::MCP7941xAddress = 0x6F;
+const uint8_t RTCx::MCP7941xEepromAddress = 0x57;
+  
+
 RTCx rtc;
 
 bool RTCx::isLeapYear(uint16_t year)
@@ -159,7 +164,7 @@ struct RTCx::tm *RTCx::gmtime_r(const time_t *timep, struct tm *result)
 }
 
 
-RTCx::RTCx(void) : address(0x68), device(RTCx::DS1307)
+RTCx::RTCx(void) : address(RTCx::DS1307Address), device(RTCx::DS1307)
 {
   ;
 }
@@ -169,10 +174,10 @@ RTCx::RTCx(uint8_t a)
   : address(a)
 {
   switch (address) {
-  case RTCx_DS1307_ADDRESS:
+  case RTCx::DS1307Address:
     device = RTCx::DS1307;
     break;
-  case RTCx_MCP7941x_ADDRESS:
+  case RTCx::MCP7941xAddress:
     device = RTCx::MCP7941x;
     break;
   default:

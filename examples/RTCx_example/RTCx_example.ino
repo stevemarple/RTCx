@@ -55,8 +55,10 @@ void setup(void)
 {
   Serial.begin(9600);
   Wire.begin();
-  uint8_t addressList[] = {RTCx_MCP7941x_ADDRESS,
-			   RTCx_DS1307_ADDRESS};
+  // The address used by the DS1307 is also used by other devices (eg
+  // MCP3424 ADC). Test for a MCP7941x device first.
+  uint8_t addressList[] = {RTCx::MCP7941xAddress,
+			   RTCx::DS1307Address};
 
   // Autoprobe to find a real-time clock.
   if (rtc.autoprobe(addressList, sizeof(addressList))) {

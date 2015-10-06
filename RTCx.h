@@ -1,17 +1,23 @@
-#ifndef RTCx_h
-#define RTCx_h
+#ifndef RTCX_h
+#define RTCX_h
+
+#define RTCX_VERSION "0.0.1"
 
 #include <stdint.h>
 
-#define RTCx_DS1307_ADDRESS 0x68
-#define RTCx_MCP7941x_ADDRESS 0x6F
-#define RTCx_MCP7941x_ADDRESS_EEPROM 0x57
+//#define RTCx_DS1307_ADDRESS 0x68
+//#define RTCx_MCP7941x_ADDRESS 0x6F
+//#define RTCx_MCP7941x_ADDRESS_EEPROM 0x57
 
 class RTCx;
 extern RTCx rtc;
 
 class RTCx {
 public:
+  static const uint8_t DS1307Address;
+  static const uint8_t MCP7941xAddress;
+  static const uint8_t MCP7941xEepromAddress;
+  
   enum device_t {
     DS1307 = 0, // Include compatible devices (eg DS1337, DS1338)
     MCP7941x = 1,
