@@ -9,6 +9,9 @@
 #define RTCX_EPOCH 1970
 #endif
 
+#if (RTCX_EPOCH <= 1900 || RTCX_EPOCH >= 2100)
+#error RTCX_EPOCH must be > 1900 and < 2100
+#endif
 #if ((RTCX_EPOCH - 1970) % 28 != 0)
 #error RTCX_EPOCH must be 1970 or differ from 1970 by a multiple of 28 years
 #endif
