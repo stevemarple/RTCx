@@ -94,30 +94,30 @@ RTCx::time_t RTCx::mktime(struct tm *tm)
   // Compute day of year
   tm->tm_yday = dayOfYear(tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday) - 1;
 
-  uint8_t yearsSince1970 = tm->tm_year - 70; 
-  time_t t = (yearsSince1970 * 365 * SECS_PER_DAY) // Whole years, leap days excluded
-    + ((yearsSince1970 / 4) * SECS_PER_DAY)  // Leap days in whole 4 year period
+  uint8_t yearsSinceEpoch = tm->tm_year + 1900  - RTCX_EPOCH; 
+  time_t t = (yearsSinceEpoch * 365 * SECS_PER_DAY) // Whole years, leap days excluded
+    + ((yearsSinceEpoch / 4) * SECS_PER_DAY)  // Leap days in whole 4 year period
     // Leap days in partial 4 year period. Count only if in last year
-    + ((yearsSince1970 % 4) == 3 ? SECS_PER_DAY : 0L) 
+    + ((yearsSinceEpoch % 4) == 3 ? SECS_PER_DAY : 0L) 
     + (tm->tm_yday * SECS_PER_DAY)           // Whole days in current year
     + (tm->tm_hour * 3600L)
     + (tm->tm_min * (uint16_t)60)
     + tm->tm_sec;
   
   // Compute day of week
-  uint32_t daysSince1970 = (t / SECS_PER_DAY);
-  tm->tm_wday = (daysSince1970 + 4) % 7; // 1970-01-01 was Thursday (day 4)
+  uint32_t daysSinceEpoch = (t / SECS_PER_DAY);
+  tm->tm_wday = (daysSinceEpoch + 4) % 7; // 1970-01-01 was Thursday (day 4)
   return t;
 }
 
 struct RTCx::tm *RTCx::gmtime_r(const time_t *timep, struct tm *result)
 {
   time_t t = *timep;
-  // Find multiples of 4 years since 1970
+  // Find multiples of 4 years since epoch
   int8_t fourYears = (int8_t)(t / SECS_PER_4_YEARS);
   if (t < 0)
     --fourYears; // Now remaining time will be positive and must add
-  result->tm_year = (fourYears * 4) + 70; // +70 because years since 1900
+  result->tm_year = (fourYears * 4) + (RTCX_EPOCH - 1900); // years since 1900
   t -= (fourYears * SECS_PER_4_YEARS);
 
   // Split t into seconds in day and days remaining.
@@ -158,8 +158,8 @@ struct RTCx::tm *RTCx::gmtime_r(const time_t *timep, struct tm *result)
   }
 
   // Compute day of week
-  uint16_t daysSince1970 = (*timep / 86400L);
-  result->tm_wday = (daysSince1970 + 4) % 7; // 1970-01-01 was Thursday (day 4)
+  uint16_t daysSinceEpoch = (*timep / 86400L);
+  result->tm_wday = (daysSinceEpoch + 4) % 7; // 1970-01-01 was Thursday (day 4)
   return result;
 }
 
@@ -292,7 +292,7 @@ bool RTCx::readClock(struct tm *tm, timeFunc_t func) const
     if (sz == 7)
       tm->tm_year = bcdToDec(Wire.read()) + 100; // Assume 21st century
     else
-      tm->tm_year = 70;
+      tm->tm_year = (RTCX_EPOCH - 1900);
     tm->tm_yday = -1;
     Wire.endTransmission();
 
@@ -492,7 +492,7 @@ bool RTCx::readTimeSaver(struct tm *tm, uint8_t reg, uint8_t sz) const
   uint8_t wdayMonth = Wire.read();
   tm->tm_mon = bcdToDec(wdayMonth & 0x1f) - 1; // Clock uses [1..12]
   tm->tm_wday = (wdayMonth >> 5) - 1; // Clock uses [1..7]
-  tm->tm_year = 70; // not stored
+  tm->tm_year = (RTCX_EPOCH - 1900); // not stored
   tm->tm_yday = -1;
   Wire.endTransmission();
   return true;

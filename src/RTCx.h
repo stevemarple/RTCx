@@ -5,9 +5,13 @@
 
 #include <stdint.h>
 
-//#define RTCx_DS1307_ADDRESS 0x68
-//#define RTCx_MCP7941x_ADDRESS 0x6F
-//#define RTCx_MCP7941x_ADDRESS_EEPROM 0x57
+#ifndef RTCX_EPOCH
+#define RTCX_EPOCH 1970
+#endif
+
+#if ((RTCX_EPOCH - 1970) % 28 != 0)
+#error RTCX_EPOCH must be 1970 or differ from 1970 by a multiple of 28 years
+#endif
 
 class RTCx;
 extern RTCx rtc;
