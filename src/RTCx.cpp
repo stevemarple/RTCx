@@ -266,7 +266,7 @@ bool RTCx::readClock(struct tm *tm, timeFunc_t func) const
 
   if (device == MCP7941x &&
       (func == TIME_POWER_FAILED || func == TIME_POWER_RESTORED))
-    return readTimeSaver(tm, reg, sz);
+    return readTimeSaver(tm, sz);
 
   while (true) {
     // Reset the register pointer
@@ -481,7 +481,7 @@ uint8_t RTCx::getRegister(timeFunc_t func, uint8_t &sz) const
 }
 
 
-bool RTCx::readTimeSaver(struct tm *tm, uint8_t reg, uint8_t sz) const
+bool RTCx::readTimeSaver(struct tm *tm, uint8_t sz) const
 {
   Wire.requestFrom(address, sz);
   tm->tm_sec = 0;

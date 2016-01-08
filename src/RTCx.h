@@ -105,7 +105,7 @@ private:
   uint8_t readData(uint8_t reg) const;
   void writeData(uint8_t reg, uint8_t value) const;
   uint8_t getRegister(timeFunc_t func, uint8_t &sz) const;
-  bool readTimeSaver(struct tm *tm, uint8_t reg, uint8_t sz) const;
+  bool readTimeSaver(struct tm *tm, uint8_t sz) const;
 };
 
 RTCx::time_t RTCx::mktime(struct tm &tm) {
