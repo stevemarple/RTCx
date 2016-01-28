@@ -203,10 +203,8 @@ bool RTCx::autoprobe(uint8_t *addressList, uint8_t len)
   for (uint8_t i = 0; i < len; ++i) {
     // Ensure register address is valid
     Wire.beginTransmission(addressList[i]);
-    Wire.write(0);
+    Wire.write(uint8_t(0));
     Wire.endTransmission();
-    //if (Wire.endTransmission() != 0)
-    //continue;
 
     // Try reading a byte
     Wire.requestFrom(addressList[i], (uint8_t)1);
