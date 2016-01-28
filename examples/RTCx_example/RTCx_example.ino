@@ -34,21 +34,21 @@
 
 void printTm(Stream &str, struct RTCx::tm *tm)
 {
-  Serial.print(tm->tm_year + 1900);
-  Serial.print('-');
-  Serial.print(tm->tm_mon + 1);
-  Serial.print('-');
-  Serial.print(tm->tm_mday);
-  Serial.print('T');
-  Serial.print(tm->tm_hour);
-  Serial.print(':');
-  Serial.print(tm->tm_min);
-  Serial.print(':');
-  Serial.print(tm->tm_sec);
-  Serial.print(" yday=");
-  Serial.print(tm->tm_yday);
-  Serial.print(" wday=");
-  Serial.println(tm->tm_wday);
+  str.print(tm->tm_year + 1900);
+  str.print('-');
+  str.print(tm->tm_mon + 1);
+  str.print('-');
+  str.print(tm->tm_mday);
+  str.print('T');
+  str.print(tm->tm_hour);
+  str.print(':');
+  str.print(tm->tm_min);
+  str.print(':');
+  str.print(tm->tm_sec);
+  str.print(" yday=");
+  str.print(tm->tm_yday);
+  str.print(" wday=");
+  str.println(tm->tm_wday);
 }
 
 void setup(void)
