@@ -284,7 +284,7 @@ bool RTCx::readClock(struct tm *tm, timeFunc_t func) const
     }
     else 
       tm->tm_hour = bcdToDec(h & 0x3f);
-    tm->tm_wday = (Wire.read() & 0x03) - 1; // Clock uses [1..7]
+    tm->tm_wday = (Wire.read() & 0x07) - 1; // Clock uses [1..7]
     tm->tm_mday = bcdToDec(Wire.read() & 0x3f);
     tm->tm_mon = bcdToDec(Wire.read() & 0x1f) - 1; // Clock uses [1..12]
     if (sz == 7)
