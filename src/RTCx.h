@@ -86,6 +86,13 @@ public:
 	inline static time_t mktime(struct tm &tm);
 	static struct tm *gmtime_r(const time_t *timep, struct tm *result);
 
+	inline static int isotime(const time_t &t, char *buffer, size_t len);
+	inline static int isotime(const struct tm &tm, char *buffer, size_t len);
+	static int isotime(const struct tm *tm, char *buffer, size_t len);
+	static Stream& printIsotime(Stream &s, const time_t &t);
+	inline static Stream& printIsotime(Stream &s, const struct tm &tm);
+	static Stream& printIsotime(Stream &s, const struct tm *tm);
+
 	RTCx(void);
 	RTCx(uint8_t a);
 	RTCx(uint8_t a, device_t d);
@@ -166,5 +173,21 @@ inline bool RTCx::setClock(const struct tm &tm, timeFunc_t func) const
 	return setClock(&tm, func);
 }
 
+inline int RTCx::isotime(const time_t &t, char *buffer, size_t len)
+{
+	struct tm tm;
+	gmtime_r(&t, &tm);
+	return isotime(&tm, buffer, len);
+}
+
+inline int RTCx::isotime(const struct tm &tm, char *buffer, size_t len)
+{
+	return isotime(&tm, buffer, len);
+}
+
+inline Stream& RTCx::printIsotime(Stream &s, const struct tm &tm)
+{
+	return printIsotime(s, &tm);
+}
 
 #endif

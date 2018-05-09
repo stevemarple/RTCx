@@ -536,3 +536,31 @@ bool RTCx::readTimeSaver(struct tm *tm, uint8_t sz) const
 	Wire.endTransmission();
 	return true;
 }
+
+int RTCx::isotime(const struct tm *tm, char *buffer, size_t len)
+{
+	return snprintf_P(buffer, len, PSTR("%04d-%02d-%02dT%02d:%02d:%02d"),
+					  tm->tm_year + 1900,
+					  tm->tm_mon + 1,
+					  tm->tm_mday,
+					  tm->tm_hour,
+					  tm->tm_min,
+					  tm->tm_sec);
+}
+
+
+Stream& RTCx::printIsotime(Stream &s, const time_t &t)
+{
+	char buffer[20];
+	isotime(t, buffer, sizeof(buffer));
+	s.print(buffer);
+	return s;
+}
+
+Stream& RTCx::printIsotime(Stream &s, const struct tm *tm)
+{
+	char buffer[20];
+	isotime(tm, buffer, sizeof(buffer));
+	s.print(buffer);
+	return s;
+}
