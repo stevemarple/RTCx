@@ -111,6 +111,7 @@ public:
 	inline bool readClock(struct tm &tm, timeFunc_t func = TIME) const;
 	bool setClock(const struct tm *tm, timeFunc_t func = TIME) const;
 	inline bool setClock(const struct tm &tm, timeFunc_t func = TIME) const;
+	bool adjustClock(time_t offset) const;
 
 	inline uint8_t getAddress(void) const;
 	inline void setAddress(uint8_t a);

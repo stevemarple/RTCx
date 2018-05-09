@@ -370,6 +370,18 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 }
 
 
+bool RTCx::adjustClock(RTCx::time_t offset) const
+{
+	struct tm tm;
+	if (!readClock(&tm))
+		return false;
+	time_t now = mktime(&tm);
+	now -= offset;
+	gmtime_r(&now, &tm);
+	return setClock(&tm);
+}
+
+
 const __FlashStringHelper* RTCx::getDeviceName() const {
 	if (device > sizeof(deviceNames) / sizeof(deviceNames[0]))
 		return (__FlashStringHelper*)(F("unknown RTC"));
