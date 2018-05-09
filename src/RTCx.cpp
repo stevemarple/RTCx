@@ -1,4 +1,3 @@
-#include <avr/pgmspace.h>
 #include <Wire.h>
 
 #include "RTCx.h"
@@ -13,7 +12,7 @@ const uint8_t RTCx::MCP7941xEepromAddress = 0x57;
 const char RTCx::DS1307Str[] PROGMEM = "DS1307";
 const char RTCx::MCP7941xStr[] PROGMEM = "MCP7941x";
 // Device names must be ordered according to their device_t enum value.
-static PGM_P const RTCx::deviceNames[] PROGMEM = {RTCx::DS1307Str, RTCx::MCP7941xStr};
+PGM_P const RTCx::deviceNames[] PROGMEM = {RTCx::DS1307Str, RTCx::MCP7941xStr};
 
 // The address used by the DS1307 is also used by other devices (eg
 // MCP3424 ADC) so test for DS1307 last.
