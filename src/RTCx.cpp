@@ -9,6 +9,10 @@ const uint8_t RTCx::DS1307Address = 0x68;
 const uint8_t RTCx::MCP7941xAddress = 0x6F;
 const uint8_t RTCx::MCP7941xEepromAddress = 0x57;
 
+// The address used by the DS1307 is also used by other devices (eg
+// MCP3424 ADC) so test for DS1307 last.
+const RTCx::device_t RTCx::autoprobeDeviceList[2] = {MCP7941x, DS1307};
+const uint8_t RTCx::autoprobeDeviceAddresses[2] = {MCP7941xAddress, DS1307Address};
 
 RTCx rtc;
 
@@ -210,6 +214,30 @@ bool RTCx::autoprobe(const uint8_t *addressList, uint8_t len)
 		Wire.requestFrom(addressList[i], (uint8_t)1);
 		if (Wire.available()) {
 			*this = RTCx(addressList[i]);
+			return true;
+		}
+	}
+	return false;
+}
+
+
+/* Autoprobe for a real-time clock, given a list of devices to
+ * check. Set the register address to zero before attempting to read a
+ * byte; the MCP7941x will return a NACK if the register address is
+ * not within its valid range.
+ */
+bool RTCx::autoprobe(const device_t *deviceList, const uint8_t *addressList, uint8_t len)
+{
+	for (uint8_t i = 0; i < len; ++i) {
+		// Ensure register address is valid
+		Wire.beginTransmission(addressList[i]);
+		Wire.write(uint8_t(0));
+		Wire.endTransmission();
+
+		// Try reading a byte
+		Wire.requestFrom(addressList[i], (uint8_t)1);
+		if (Wire.available()) {
+			*this = RTCx(addressList[i], deviceList[i]);
 			return true;
 		}
 	}

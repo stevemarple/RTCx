@@ -3,6 +3,17 @@
 
 #define RTCX_VERSION "1.0.4"
 
+
+#if defined(__GNUC__) || defined(__clang__)
+#define DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+#define DEPRECATED __declspec(deprecated)
+#else
+// Deprecated warnings are not available for this compiler
+#define DEPRECATED
+#endif
+
+
 #include <stdint.h>
 
 #ifndef RTCX_EPOCH
@@ -46,6 +57,10 @@ public:
 		freqCalibration = 4, // device-specific calibration
 	};
 
+	// Devices which can be autoprobed and their recommended order
+	static const device_t autoprobeDeviceList[2];
+	static const uint8_t autoprobeDeviceAddresses[2];
+
 	struct tm {
 		int tm_sec; // Seconds [0..59]
 		int tm_min; // Minutes [0..59].
@@ -71,7 +86,12 @@ public:
 	RTCx(uint8_t a);
 	RTCx(uint8_t a, device_t d);
 
-	bool autoprobe(const uint8_t *addressList, uint8_t len);
+	inline bool autoprobe(void) {
+		return autoprobe(&autoprobeDeviceList[0], autoprobeDeviceAddresses, sizeof(autoprobeDeviceList));
+	};
+	bool autoprobe(const device_t *deviceList, const uint8_t *addressList, uint8_t len);
+
+	DEPRECATED bool autoprobe(const uint8_t *addressList, uint8_t len);
 
 	void stopClock(void) const;
 	void startClock(void) const;
