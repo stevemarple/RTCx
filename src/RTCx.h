@@ -35,6 +35,7 @@ public:
 	enum device_t {
 		DS1307 = 0, // Include compatible devices (eg DS1337, DS1338)
 		MCP7941x = 1,
+		PCF85263 = 2,
 	};
 
 	enum timeFunc_t {
@@ -56,14 +57,19 @@ public:
 	static const uint8_t DS1307Address;
 	static const uint8_t MCP7941xAddress;
 	static const uint8_t MCP7941xEepromAddress;
+	static const uint8_t PCF85263Address;
 
 	static const char DS1307Str[] PROGMEM;
 	static const char MCP7941xStr[] PROGMEM;
+	static const char PCF85263Str[] PROGMEM;
 	static PGM_P const deviceNames[] PROGMEM;
 
 	// Devices which can be autoprobed and their recommended order
-	static const device_t autoprobeDeviceList[2];
-	static const uint8_t autoprobeDeviceAddresses[2];
+	static const device_t autoprobeDeviceList[3];
+	static const uint8_t autoprobeDeviceAddresses[3];
+
+	void init(void) const;
+	void resetClock(void) const;
 
 	struct tm {
 		int tm_sec; // Seconds [0..59]

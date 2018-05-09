@@ -8,16 +8,18 @@
 const uint8_t RTCx::DS1307Address = 0x68;
 const uint8_t RTCx::MCP7941xAddress = 0x6F;
 const uint8_t RTCx::MCP7941xEepromAddress = 0x57;
+const uint8_t RTCx::PCF85263Address = 0x51;
 
 const char RTCx::DS1307Str[] PROGMEM = "DS1307";
 const char RTCx::MCP7941xStr[] PROGMEM = "MCP7941x";
+const char RTCx::PCF85263Str[] PROGMEM = "PCF85263";
 // Device names must be ordered according to their device_t enum value.
-PGM_P const RTCx::deviceNames[] PROGMEM = {RTCx::DS1307Str, RTCx::MCP7941xStr};
+PGM_P const RTCx::deviceNames[] PROGMEM = {RTCx::DS1307Str, RTCx::MCP7941xStr, RTCx::PCF85263Str};
 
 // The address used by the DS1307 is also used by other devices (eg
 // MCP3424 ADC) so test for DS1307 last.
-const RTCx::device_t RTCx::autoprobeDeviceList[2] = {MCP7941x, DS1307};
-const uint8_t RTCx::autoprobeDeviceAddresses[2] = {MCP7941xAddress, DS1307Address};
+const RTCx::device_t RTCx::autoprobeDeviceList[3] = {MCP7941x, PCF85263, DS1307};
+const uint8_t RTCx::autoprobeDeviceAddresses[3] = {MCP7941xAddress, PCF85263Address, DS1307Address};
 
 RTCx rtc;
 
@@ -249,9 +251,39 @@ bool RTCx::autoprobe(const device_t *deviceList, const uint8_t *addressList, uin
 	return false;
 }
 
+// Do wahtever is needed for normal operation
+void RTCx::init(void) const
+{
+	if (device == PCF85263) {
+		writeData(0x28, 0x07); // realtime clock mode, no periodic interrupts, no external clock
+	}
+	clearVBAT();
+	startClock();
+}
+
+void RTCx::resetClock(void) const
+{
+	switch (device) {
+	case PCF85263:
+		writeData(0x2f, 0x2c);
+		break;
+
+	case DS1307:
+	case MCP7941x:
+		// Nothing to do
+		break;
+	}
+}
+
 void RTCx::stopClock(void) const
 {
-	uint8_t s = readData(0);
+	if (device == PCF85263) {
+		writeData(0x2e, 1);
+		return;
+	}
+
+	uint8_t reg = 0;
+	uint8_t s = readData(reg);
 	switch (device) {
 	case DS1307:
 		s |= 0x80;
@@ -259,14 +291,22 @@ void RTCx::stopClock(void) const
 	case MCP7941x:
 		s &= 0x7f;
 		break;
+	case PCF85263:
+		break;
 	}
-	writeData(0, s);
+	writeData(reg, s);
 }
 
 // Start the clock, if it isn't running already
 void RTCx::startClock(void) const
 {
-	uint8_t s = readData(0);
+	if (device == PCF85263) {
+		writeData(0x2e, 0);
+		return;
+	}
+
+	uint8_t reg = 0;
+	uint8_t s = readData(reg);
 	uint8_t s2 = s;
 	switch (device) {
 	case MCP7941x:
@@ -275,10 +315,12 @@ void RTCx::startClock(void) const
 	case DS1307:
 		s2 &= 0x7f; // Clear clock halt
 		break;
+	case PCF85263:
+		break;
 	}
 
 	if (s != s2)
-		writeData(0, s2);
+		writeData(reg, s2);
 }
 
 
@@ -317,17 +359,26 @@ bool RTCx::readClock(struct tm *tm, timeFunc_t func) const
 		}
 		else
 			tm->tm_hour = bcdToDec(h & 0x3f);
-		tm->tm_wday = (Wire.read() & 0x07) - 1; // Clock uses [1..7]
-		tm->tm_mday = bcdToDec(Wire.read() & 0x3f);
+
+		if (device == PCF85263) {
+			// Day of month is before day of week!
+			tm->tm_mday = bcdToDec(Wire.read() & 0x3f);
+			tm->tm_wday = (Wire.read() & 0x07); // Clock uses [0..6]
+		}
+		else {
+			tm->tm_wday = (Wire.read() & 0x07) - 1; // Clock uses [1..7]
+			tm->tm_mday = bcdToDec(Wire.read() & 0x3f);
+		}
+
 		tm->tm_mon = bcdToDec(Wire.read() & 0x1f) - 1; // Clock uses [1..12]
-		if (sz == 7)
+		if (sz >= 7)
 			tm->tm_year = bcdToDec(Wire.read()) + 100; // Assume 21st century
 		else
 			tm->tm_year = (RTCX_EPOCH - 1900);
 		tm->tm_yday = -1;
 		Wire.endTransmission();
 
-		if ((func != TIME) || (tm->tm_sec == bcdToDec(readData(0) & 0x7f)))
+		if ((func != TIME) || (tm->tm_sec == bcdToDec(readData(reg) & 0x7f)))
 			break;
 	}
 	return true;
@@ -338,7 +389,7 @@ bool RTCx::readClock(char* buffer, size_t len) const
 {
 	// YYYY-MM-DDTHH:MM:SS
 	// 12345678901234567890
-	if (buffer == NULL || len < 20) 
+	if (buffer == NULL || len < 20)
 		return false;
 	struct tm tm;
 	if (!readClock(tm))
@@ -370,8 +421,16 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 	Wire.write(reg + 1);
 	Wire.write(decToBcd(tm->tm_min));
 	Wire.write(decToBcd(tm->tm_hour)); // Forces 24h mode
-	Wire.write(decToBcd(tm->tm_wday + 1) | osconEtc);
-	Wire.write(decToBcd(tm->tm_mday));
+
+	if (device == PCF85263) {
+		Wire.write(decToBcd(tm->tm_mday));
+		Wire.write(decToBcd(tm->tm_wday)); // Clock uses [0..6]
+	}
+	else {
+		Wire.write(decToBcd(tm->tm_wday + 1) | osconEtc); // Clock uses [1..7]
+		Wire.write(decToBcd(tm->tm_mday));
+	}
+
 	Wire.write(decToBcd(tm->tm_mon + 1)); // leap year read-only on MCP7941x
 	Wire.write(decToBcd(tm->tm_year % 100));
 	Wire.endTransmission();
@@ -386,7 +445,7 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 
 bool RTCx::setClock(const char* s, timeFunc_t func) const
 {
-	if (s == NULL || strlen(s) < 19) 
+	if (s == NULL || strlen(s) < 19)
 		return false;
 	struct tm tm;
 	tm.tm_year = atoi(s) - 1900;
@@ -398,7 +457,7 @@ bool RTCx::setClock(const char* s, timeFunc_t func) const
 	tm.tm_hour = atoi(s);
 	s += 3;
 	tm.tm_min = atoi(s);
- 	s += 3;
+	s += 3;
 	tm.tm_sec = atoi(s);
 	mktime(&tm);
 	return setClock(&tm, func);
@@ -524,6 +583,10 @@ void RTCx::startClock(uint8_t bcdSec) const
 	case DS1307:
 		bcdSec &= 0x7f;
 		break;
+	case PCF85263:
+		writeData(1, bcdSec);
+		writeData(0x2e, 0);
+		return;
 	}
 	writeData(0, bcdSec);
 }
@@ -552,13 +615,16 @@ void RTCx::writeData(uint8_t reg, uint8_t value) const
 
 uint8_t RTCx::getRegister(timeFunc_t func, uint8_t &sz) const
 {
-	const uint8_t regTable[2][5] = {
+	const uint8_t regTable[3][5] = {
 		{0, 0xff, 0xff, 0xff, 0xff}, // DS1307
 		{0, 0x0a, 0x11, 0x18, 0x1C}, // MCP7941x
+		{1, 0x08, 0x0d, 0xff, 0xff}, // PCF85263
+
 	};
-	const uint8_t szTable[2][5] = {
+	const uint8_t szTable[3][5] = {
 		{7, 0, 0, 0, 0}, // DS1307
 		{7, 6, 6, 4, 4}, // MCP7941x
+		{7, 0, 0, 0, 0}, // PCF85263. Alarms not supported.
 	};
 	sz = szTable[device][func];
 	return regTable[device][func];
