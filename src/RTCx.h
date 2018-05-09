@@ -32,10 +32,6 @@ extern RTCx rtc;
 
 class RTCx {
 public:
-	static const uint8_t DS1307Address;
-	static const uint8_t MCP7941xAddress;
-	static const uint8_t MCP7941xEepromAddress;
-
 	enum device_t {
 		DS1307 = 0, // Include compatible devices (eg DS1337, DS1338)
 		MCP7941x = 1,
@@ -56,6 +52,14 @@ public:
 		freq32768Hz = 3,
 		freqCalibration = 4, // device-specific calibration
 	};
+
+	static const uint8_t DS1307Address;
+	static const uint8_t MCP7941xAddress;
+	static const uint8_t MCP7941xEepromAddress;
+
+	static const char DS1307Str[] PROGMEM;
+	static const char MCP7941xStr[] PROGMEM;
+	static PGM_P const deviceNames[] PROGMEM;
 
 	// Devices which can be autoprobed and their recommended order
 	static const device_t autoprobeDeviceList[2];
@@ -105,7 +109,7 @@ public:
 	inline void setAddress(uint8_t a);
 	inline device_t getDevice(void) const;
 	inline void setDevice(device_t d);
-
+	const __FlashStringHelper* getDeviceName() const;
 	bool setSQW(freq_t f) const;
 
 	// Functions for MCP7941x

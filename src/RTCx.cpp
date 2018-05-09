@@ -9,6 +9,11 @@ const uint8_t RTCx::DS1307Address = 0x68;
 const uint8_t RTCx::MCP7941xAddress = 0x6F;
 const uint8_t RTCx::MCP7941xEepromAddress = 0x57;
 
+const char RTCx::DS1307Str[] PROGMEM = "DS1307";
+const char RTCx::MCP7941xStr[] PROGMEM = "MCP7941x";
+// Device names must be ordered according to their device_t enum value.
+static PGM_P const RTCx::deviceNames[] PROGMEM = {RTCx::DS1307Str, RTCx::MCP7941xStr};
+
 // The address used by the DS1307 is also used by other devices (eg
 // MCP3424 ADC) so test for DS1307 last.
 const RTCx::device_t RTCx::autoprobeDeviceList[2] = {MCP7941x, DS1307};
@@ -362,6 +367,14 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 	else
 		writeData(reg, decToBcd(tm->tm_sec));
 	return true;
+}
+
+
+const __FlashStringHelper* RTCx::getDeviceName() const {
+	if (device > sizeof(deviceNames) / sizeof(deviceNames[0]))
+		return (__FlashStringHelper*)(F("unknown RTC"));
+	else
+		return (__FlashStringHelper*)(pgm_read_word(&(deviceNames[device])));
 }
 
 
