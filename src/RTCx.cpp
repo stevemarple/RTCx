@@ -198,7 +198,7 @@ RTCx::RTCx(uint8_t a, device_t d)
  * byte; the MCP7941x will return a NACK if the register address is
  * not within its valid range.
  */
-bool RTCx::autoprobe(uint8_t *addressList, uint8_t len)
+bool RTCx::autoprobe(const uint8_t *addressList, uint8_t len)
 {
 	for (uint8_t i = 0; i < len; ++i) {
 		// Ensure register address is valid

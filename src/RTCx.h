@@ -71,7 +71,7 @@ public:
 	RTCx(uint8_t a);
 	RTCx(uint8_t a, device_t d);
 
-	bool autoprobe(uint8_t *addressList, uint8_t len);
+	bool autoprobe(const uint8_t *addressList, uint8_t len);
 
 	void stopClock(void) const;
 	void startClock(void) const;
