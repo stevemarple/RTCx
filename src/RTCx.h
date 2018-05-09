@@ -109,8 +109,10 @@ public:
 
 	bool readClock(struct tm *tm, timeFunc_t func = TIME) const;
 	inline bool readClock(struct tm &tm, timeFunc_t func = TIME) const;
+	bool readClock(char *buffer, size_t len) const;
 	bool setClock(const struct tm *tm, timeFunc_t func = TIME) const;
 	inline bool setClock(const struct tm &tm, timeFunc_t func = TIME) const;
+	bool setClock(const char* ISOTimestamp, timeFunc_t func = TIME) const;
 	bool adjustClock(time_t offset) const;
 
 	inline uint8_t getAddress(void) const;

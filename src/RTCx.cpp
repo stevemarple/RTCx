@@ -1,5 +1,6 @@
 #include <avr/pgmspace.h>
 #include <Wire.h>
+
 #include "RTCx.h"
 
 #define SECS_PER_DAY 86400L
@@ -334,6 +335,20 @@ bool RTCx::readClock(struct tm *tm, timeFunc_t func) const
 }
 
 
+bool RTCx::readClock(char* buffer, size_t len) const
+{
+	// YYYY-MM-DDTHH:MM:SS
+	// 12345678901234567890
+	if (buffer == NULL || len < 20) 
+		return false;
+	struct tm tm;
+	if (!readClock(tm))
+		return false;
+	int n = isotime(tm, buffer, len);
+	return size_t(n) < len; // If n >= len the string was truncated
+}
+
+
 bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 {
 	// Find which register to read from
@@ -369,6 +384,26 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 	return true;
 }
 
+
+bool RTCx::setClock(const char* s, timeFunc_t func) const
+{
+	if (s == NULL || strlen(s) < 19) 
+		return false;
+	struct tm tm;
+	tm.tm_year = atoi(s) - 1900;
+	s += 5;
+	tm.tm_mon = atoi(s) - 1;
+	s += 3;
+	tm.tm_mday = atoi(s);
+	s += 3;
+	tm.tm_hour = atoi(s);
+	s += 3;
+	tm.tm_min = atoi(s);
+ 	s += 3;
+	tm.tm_sec = atoi(s);
+	mktime(&tm);
+	return setClock(&tm, func);
+}
 
 bool RTCx::adjustClock(RTCx::time_t offset) const
 {
