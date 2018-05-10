@@ -268,6 +268,7 @@ void RTCx::init(void) const
 		Wire.write(0x00); // 0x2a
 		Wire.endTransmission();
 	}
+	enableBatteryBackup();
 	startClock();
 }
 
