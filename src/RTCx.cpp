@@ -256,19 +256,25 @@ bool RTCx::autoprobe(const device_t *deviceList, const uint8_t *addressList, uin
 void RTCx::init(void) const
 {
 	if (device == PCF85263) {
+		// Set various sensible defaults, including enabling battery
+		// backup and zeroing the calibration.
 		Wire.beginTransmission(address);
 		Wire.write(0x23); // Start register
 		Wire.write(0x00); // 0x23
 		Wire.write(0x00); // 0x24 Two's complement offset value
 		Wire.write(0x12); // 0x25 Normal offset correction, enable low-jitter mode, set load caps to 12.5pF
-		Wire.write(0x00); // 0x26 Same as after a reset
+		Wire.write(0x00); // 0x26 Battery switch reg, same as after a reset
 		Wire.write(0x00); // 0x27 Enable CLK pin, using bits set in reg 0x28
 		Wire.write(0x07); // 0x28 Realtime clock mode, no periodic interrupts, CLK pin off
 		Wire.write(0x00); // 0x29
 		Wire.write(0x00); // 0x2a
 		Wire.endTransmission();
 	}
-	enableBatteryBackup();
+	else {
+		enableBatteryBackup();
+		setCalibration(0);
+	}
+
 	startClock();
 }
 
