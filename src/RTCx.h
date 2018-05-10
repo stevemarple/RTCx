@@ -75,7 +75,7 @@ public:
 	static const uint8_t autoprobeDeviceAddresses[3];
 
 	void init(void) const;
-	void resetClock(void) const;
+	bool resetClock(void) const;
 
 	struct tm {
 		int tm_sec; // Seconds [0..59]

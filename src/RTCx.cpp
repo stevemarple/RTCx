@@ -272,17 +272,18 @@ void RTCx::init(void) const
 	startClock();
 }
 
-void RTCx::resetClock(void) const
+bool RTCx::resetClock(void) const
 {
 	switch (device) {
 	case PCF85263:
 		writeData(0x2f, 0x2c);
-		break;
+		return true;
 
 	case DS1307:
 	case MCP7941x:
+	default:
 		// Nothing to do
-		break;
+		return false;
 	}
 }
 
