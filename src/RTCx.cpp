@@ -309,16 +309,23 @@ void RTCx::stopClock(void) const
 	writeData(reg, s);
 }
 
-// Start the clock, if it isn't running already
-void RTCx::startClock(void) const
+// Start the clock. If bcdSec is >= 0 zero use its value for the
+// seconds instead of reading the current value. This helps reduce the
+// number of I2C reads and writes required.
+void RTCx::startClock(int16_t bcdSec) const
 {
 	if (device == PCF85263) {
 		writeData(0x2e, 0);
 		return;
 	}
 
+	uint8_t s;
 	uint8_t reg = 0;
-	uint8_t s = readData(reg);
+	if (bcdSec < 0)
+		s = readData(reg);
+	else
+		s = uint8_t(bcdSec & 0x7f);
+
 	uint8_t s2 = s;
 	switch (device) {
 	case MCP7941x:
@@ -331,7 +338,10 @@ void RTCx::startClock(void) const
 		break;
 	}
 
-	if (s != s2)
+	// Write back the data if it is different to the contents of the
+	// register.  Always write back if the data wasn't fetched with
+	// readData as the contents of the stop bit are unknown.
+	if (s != s2 || bcdSec < 0)
 		writeData(reg, s2);
 }
 
@@ -418,23 +428,49 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 	uint8_t reg = getRegister(func, sz);
 
 	if (sz == 0)
-		return false; // not supported
+		return false; // Function not supported
 
-	if (func == TIME)
-		stopClock();
-
+	uint8_t clockHalt = 0;
 	uint8_t osconEtc = 0;
-	if (device == MCP7941x)
-		// Preserve OSCON, VBAT, VBATEN on MCP7941x
-		osconEtc = readData((uint8_t)0x03) & 0x38;
 
-	// Write everything *except* the second
-	Wire.beginTransmission(address);
-	Wire.write(reg + 1);
+	if (func == TIME) {
+		if (device == PCF85263) {
+			// Stop clock and clear prescaler in one operation
+			Wire.beginTransmission(address);
+			Wire.write(0x2e);
+			Wire.write(1); // 0x2e Stop the clock
+			Wire.write(0xa4); // 0x2f STOP
+			// Register wraps round to 0x00
+			Wire.write(0); // Clear hundredths of seconds
+			// Now ready to write seconds
+			// Wire.endTransmission();
+		}
+		else {
+			stopClock();
+
+			if (device == DS1307)
+				clockHalt = 0x80; // Clock halt to be kept enabled for now
+
+			if (device == MCP7941x)
+				// Preserve OSCON, VBAT, VBATEN on MCP7941x
+				osconEtc = readData((uint8_t)0x03) & 0x38;
+
+			Wire.beginTransmission(address);
+			Wire.write(reg);
+			// Now ready to write seconds
+		}
+	}
+
+	// Wire.beginTransmission(address);
+	// Wire.write(reg);
+	Wire.write(decToBcd(tm->tm_sec) | clockHalt);
+
 	Wire.write(decToBcd(tm->tm_min));
 	Wire.write(decToBcd(tm->tm_hour)); // Forces 24h mode
 
 	if (device == PCF85263) {
+		// Day of month and weekday are in reverse order compared to
+		// DS1307 and MCP7941x
 		Wire.write(decToBcd(tm->tm_mday));
 		Wire.write(decToBcd(tm->tm_wday)); // Clock uses [0..6]
 	}
@@ -443,7 +479,8 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 		Wire.write(decToBcd(tm->tm_mday));
 	}
 
-	Wire.write(decToBcd(tm->tm_mon + 1)); // leap year read-only on MCP7941x
+	// Leap year bit on MCP7941x is read-only so ignore it
+	Wire.write(decToBcd(tm->tm_mon + 1));
 
 	if (sz >= 7)
 		Wire.write(decToBcd(tm->tm_year % 100));
@@ -451,9 +488,8 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 	Wire.endTransmission();
 
 	if (func == TIME)
-		startClock(decToBcd(tm->tm_sec));
-	else
-		writeData(reg, decToBcd(tm->tm_sec));
+		// startClock(decToBcd(tm->tm_sec));
+		startClock();
 	return true;
 }
 
@@ -567,8 +603,7 @@ void RTCx::enableBatteryBackup(bool enable) const
 		else
 			d &= 0xf7;
 		writeData((uint8_t)0x03, d);
-		uint8_t s = readData((uint8_t)0);
-		startClock(s);
+		startClock();
 	}
 }
 
@@ -579,8 +614,7 @@ void RTCx::clearPowerFailFlag(void) const
 		uint8_t d = readData((uint8_t)0x03);
 		d &= 0xef;
 		writeData((uint8_t)0x03, d);
-		uint8_t s = readData((uint8_t)0);
-		startClock(s);
+		startClock();
 	}
 }
 
@@ -625,24 +659,6 @@ uint8_t RTCx::bcdToDec(uint8_t b)
 uint8_t RTCx::decToBcd(uint8_t b)
 {
 	return ( ((b/10) << 4) + (b%10) );
-}
-
-
-void RTCx::startClock(uint8_t bcdSec) const
-{
-	switch (device) {
-	case MCP7941x:
-		bcdSec |= 0x80; // Enable start bit
-		break;
-	case DS1307:
-		bcdSec &= 0x7f;
-		break;
-	case PCF85263:
-		writeData(1, bcdSec);
-		writeData(0x2e, 0);
-		return;
-	}
-	writeData(0, bcdSec);
 }
 
 

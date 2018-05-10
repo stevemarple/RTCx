@@ -117,7 +117,9 @@ public:
 	DEPRECATED bool autoprobe(const uint8_t *addressList, uint8_t len);
 
 	void stopClock(void) const;
-	void startClock(void) const;
+	inline void startClock(void) const {
+		startClock((int16_t)-1);
+	}
 
 	bool readClock(struct tm *tm, timeFunc_t func = TIME) const;
 	inline bool readClock(struct tm &tm, timeFunc_t func = TIME) const;
@@ -147,7 +149,7 @@ private:
 	static uint8_t bcdToDec(uint8_t b);
 	static uint8_t decToBcd(uint8_t b);
 
-	void startClock(uint8_t bcdSec) const;
+	void startClock(int16_t bcdSec) const;
 	uint8_t readData(uint8_t reg) const;
 	void writeData(uint8_t reg, uint8_t value) const;
 	uint8_t getRegister(timeFunc_t func, uint8_t &sz) const;
