@@ -51,7 +51,13 @@ public:
 		freq4096Hz = 1,
 		freq8192Hz = 2,
 		freq32768Hz = 3,
-		freqCalibration = 4, // device-specific calibration
+		freqCalibration = 4, // device-specific calibration for MCP7941x
+
+		// Additional values for PCF85263
+		freq1024Hz = 5,
+		freq2048Hz = 6,
+		freq16384Hz = 7,
+		freqOutputLow = 8,
 	};
 
 	static const uint8_t DS1307Address;

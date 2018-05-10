@@ -251,11 +251,22 @@ bool RTCx::autoprobe(const device_t *deviceList, const uint8_t *addressList, uin
 	return false;
 }
 
-// Do wahtever is needed for normal operation
+// Do whatever is needed for 'normal' operation. For the PCF85263 this
+// means behaviour similar to the default DS1307 behaviour.
 void RTCx::init(void) const
 {
 	if (device == PCF85263) {
-		writeData(0x28, 0x07); // realtime clock mode, no periodic interrupts, no external clock
+		Wire.beginTransmission(address);
+		Wire.write(0x23); // Start register
+		Wire.write(0x00); // 0x23
+		Wire.write(0x00); // 0x24 Two's complement offset value
+		Wire.write(0x12); // 0x25 Normal offset correction, enable low-jitter mode, set load caps to 12.5pF
+		Wire.write(0x00); // 0x26 Same as after a reset
+		Wire.write(0x00); // 0x27 Enable CLK pin, using bits set in reg 0x28
+		Wire.write(0x07); // 0x28 Realtime clock mode, no periodic interrupts, CLK pin off
+		Wire.write(0x00); // 0x29
+		Wire.write(0x00); // 0x2a
+		Wire.endTransmission();
 	}
 	clearVBAT();
 	startClock();
@@ -493,10 +504,49 @@ bool RTCx::setSQW(freq_t f) const
 		}
 		break;
 	case MCP7941x:
-		uint8_t ctrl = readData(0x07) & uint8_t(0xf8);
-		ctrl |= f;
-		ctrl |=0x40; // Enable square wave
-		writeData(0x07, ctrl);
+		if (f <= freqCalibration) {
+			uint8_t ctrl = readData(0x07) & uint8_t(0xf8);
+			ctrl |= f;
+			ctrl |=0x40; // Enable square wave
+			writeData(0x07, ctrl);
+			return true;
+		}
+		break;
+	case PCF85263:
+		uint8_t val;
+		switch (f) {
+		case freq32768Hz:
+			val = 0;
+			break;
+		case freq16384Hz:
+			val = 1;
+			break;
+		case freq8192Hz:
+			val = 2;
+			break;
+		case freq4096Hz:
+			val = 3;
+			break;
+		case freq2048Hz:
+			val = 4;
+			break;
+		case freq1024Hz:
+			val = 5;
+			break;
+		case freq1Hz:
+			val = 6;
+			break;
+		case freqOutputLow:
+			val = 7;
+			break;
+		default:
+			return false;
+		}
+		writeData(0x28, val);
+		// Ensure CLK pin is enabled
+		uint8_t pinIoRegVal = readData(0x27);
+		pinIoRegVal &= 0x7f;
+		writeData(0x27, pinIoRegVal);
 		return true;
 	}
 	return false;
