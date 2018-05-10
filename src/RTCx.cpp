@@ -444,7 +444,10 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 	}
 
 	Wire.write(decToBcd(tm->tm_mon + 1)); // leap year read-only on MCP7941x
-	Wire.write(decToBcd(tm->tm_year % 100));
+
+	if (sz >= 7)
+		Wire.write(decToBcd(tm->tm_year % 100));
+
 	Wire.endTransmission();
 
 	if (func == TIME)
