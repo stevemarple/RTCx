@@ -136,7 +136,7 @@ public:
 
 	// Functions for MCP7941x
 	void enableBatteryBackup(bool enable = true) const;
-	void clearVBAT(void) const;
+	void clearPowerFailFlag(void) const;
 	int8_t getCalibration(void) const;
 	bool setCalibration(int8_t cal) const;
 

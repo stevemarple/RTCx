@@ -59,7 +59,7 @@ void setup(void)
 	// but needs to be enabled on the MCP7941x.
 	rtc.enableBatteryBackup();
 
-	// rtc.clearVBAT();
+	// rtc.clearPowerFailFlag();
 
 	// Ensure the oscillator is running.
 	rtc.startClock();

@@ -27,7 +27,7 @@ getAddress		KEYWORD2
 setAddress		KEYWORD2
 setSQW			KEYWORD2
 enableBatteryBackup	KEYWORD2
-clearVBAT		KEYWORD2
+clearPowerFailFlag	KEYWORD2
 getCalibration		KEYWORD2
 setCalibration		KEYWORD2
 

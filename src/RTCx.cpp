@@ -268,7 +268,6 @@ void RTCx::init(void) const
 		Wire.write(0x00); // 0x2a
 		Wire.endTransmission();
 	}
-	clearVBAT();
 	startClock();
 }
 
@@ -569,7 +568,7 @@ void RTCx::enableBatteryBackup(bool enable) const
 	}
 }
 
-void RTCx::clearVBAT(void) const
+void RTCx::clearPowerFailFlag(void) const
 {
 	if (device == MCP7941x) {
 		stopClock();
