@@ -621,20 +621,31 @@ void RTCx::clearPowerFailFlag(void) const
 
 int8_t RTCx::getCalibration(void) const
 {
-	if (device == MCP7941x) {
-		// Convert from signed magnitude to two's complement.
-		uint8_t d = readData(0x08);
-		int8_t r = d & 0x7Fu;
-		return (d & 0x80u ? -r : r);
+	switch (device) {
+	case MCP7941x:
+		{
+			// Convert from signed magnitude to two's complement.
+			uint8_t d = readData(0x08);
+			int8_t r = d & 0x7Fu;
+			return (d & 0x80u ? -r : r);
+		}
+		break;
+
+	case PCF85263:
+		return readData(0x24);
+		break;
+
+	case DS1307:
+		break;
 	}
-	else
-		return 0;
+	return 0;
 }
 
 
 bool RTCx::setCalibration(int8_t cal) const
 {
-	if (device == MCP7941x) {
+	switch (device) {
+	case MCP7941x:
 		// Convert two's complement to signed magnitude.
 		if (cal == -128)
 			cal = -127; // Out of range, use next best value.
@@ -645,6 +656,13 @@ bool RTCx::setCalibration(int8_t cal) const
 			d = cal;
 		writeData(0x08, d);
 		return true;
+
+	case PCF85263:
+		writeData(0x24, cal);
+		return true;
+
+	case DS1307:
+		break;
 	}
 	return false;
 }
