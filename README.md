@@ -2,12 +2,13 @@
 
 Arduino library to support DS1307 and similar I2C real-time
 clocks. The library can autoprobe to find the actual hardware based on
-I2C address and registers.
+I2C address.
 
 ## Supported devices
 
 *  DS1307 (also DS1337, DS1338)
 *  MCP7941x (MCP79410, MCP79411, MCP79412)
+*  PCF85263(A)
 
 ## License
 Released under the GNU Lesser General Public License, version 2.1. See
