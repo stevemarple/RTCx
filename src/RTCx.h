@@ -123,7 +123,7 @@ public:
 
 	bool readClock(struct tm *tm, timeFunc_t func = TIME) const;
 	inline bool readClock(struct tm &tm, timeFunc_t func = TIME) const;
-	bool readClock(char *buffer, size_t len) const;
+	bool readClock(char *buffer, size_t len, timeFunc_t func = TIME) const;
 	bool setClock(const struct tm *tm, timeFunc_t func = TIME) const;
 	inline bool setClock(const struct tm &tm, timeFunc_t func = TIME) const;
 	bool setClock(const char* ISOTimestamp, timeFunc_t func = TIME) const;
@@ -138,6 +138,7 @@ public:
 
 	// Functions for MCP7941x
 	void enableBatteryBackup(bool enable = true) const;
+	bool getPowerFailFlag(void) const;
 	void clearPowerFailFlag(void) const;
 	int8_t getCalibration(void) const;
 	bool setCalibration(int8_t cal) const;
@@ -153,7 +154,7 @@ private:
 	uint8_t readData(uint8_t reg) const;
 	void writeData(uint8_t reg, uint8_t value) const;
 	uint8_t getRegister(timeFunc_t func, uint8_t &sz) const;
-	bool readTimeSaver(struct tm *tm, uint8_t sz) const;
+	bool readTimeSaver(struct tm *tm, uint8_t reg, uint8_t sz) const;
 };
 
 RTCx::time_t RTCx::mktime(struct tm &tm) {

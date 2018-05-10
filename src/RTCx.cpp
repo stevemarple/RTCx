@@ -367,7 +367,7 @@ bool RTCx::readClock(struct tm *tm, timeFunc_t func) const
 
 	if (device == MCP7941x &&
 		(func == TIME_POWER_FAILED || func == TIME_POWER_RESTORED))
-		return readTimeSaver(tm, sz);
+		return readTimeSaver(tm, reg, sz);
 
 	while (true) {
 		// Reset the register pointer
@@ -413,14 +413,14 @@ bool RTCx::readClock(struct tm *tm, timeFunc_t func) const
 }
 
 
-bool RTCx::readClock(char* buffer, size_t len) const
+bool RTCx::readClock(char* buffer, size_t len, timeFunc_t func) const
 {
 	// YYYY-MM-DDTHH:MM:SS
 	// 12345678901234567890
 	if (buffer == NULL || len < 20)
 		return false;
 	struct tm tm;
-	if (!readClock(tm))
+	if (!readClock(tm, func))
 		return false;
 	int n = isotime(tm, buffer, len);
 	return size_t(n) < len; // If n >= len the string was truncated
@@ -602,8 +602,15 @@ bool RTCx::setSQW(freq_t f) const
 void RTCx::enableBatteryBackup(bool enable) const
 {
 	if (device == MCP7941x) {
+		// Writing to register 0x03 will clear the power-fail flag and
+		// zero the power fail and power restored timestamps. Only
+		// actually enable the bit if it is not already set.
+		if (bool(readData(0x03) & 0x08) == enable)
+			// State matches that requested
+			return;
+
 		stopClock();
-		uint8_t d = readData((uint8_t)0x03);
+		uint8_t d = readData(0x03);
 		if (enable)
 			d |= 0x08;
 		else
@@ -612,6 +619,16 @@ void RTCx::enableBatteryBackup(bool enable) const
 		startClock();
 	}
 }
+
+
+bool RTCx::getPowerFailFlag(void) const
+{
+	if (device == MCP7941x)
+		return readData(0x03) & 0x10;
+
+	return false;
+}
+
 
 void RTCx::clearPowerFailFlag(void) const
 {
@@ -726,8 +743,13 @@ uint8_t RTCx::getRegister(timeFunc_t func, uint8_t &sz) const
 }
 
 
-bool RTCx::readTimeSaver(struct tm *tm, uint8_t sz) const
+bool RTCx::readTimeSaver(struct tm *tm, uint8_t reg, uint8_t sz) const
 {
+	// Reset the register pointer
+	Wire.beginTransmission(address);
+	Wire.write(reg);
+	Wire.endTransmission();
+
 	Wire.requestFrom(address, sz);
 	tm->tm_sec = 0;
 	tm->tm_min = bcdToDec(Wire.read() & 0x7f);
