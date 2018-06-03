@@ -23,8 +23,10 @@
 #if (RTCX_EPOCH <= 1900 || RTCX_EPOCH >= 2100)
 #error RTCX_EPOCH must be > 1900 and < 2100
 #endif
-#if ((RTCX_EPOCH - 1970) % 28 != 0)
-#error RTCX_EPOCH must be 1970 or differ from 1970 by a multiple of 28 years
+
+// This restriction comes from assumptions made in mktime() and gmtime_r() to calculate day of year.
+#if ((RTCX_EPOCH - 1970) % 4 != 0)
+#error RTCX_EPOCH must be 1970 or differ from 1970 by a multiple of 4 years
 #endif
 
 class RTCx;
@@ -59,6 +61,8 @@ public:
 		freq16384Hz = 7,
 		freqOutputLow = 8,
 	};
+
+	static const uint8_t epochDow; // Day of the week for the epoch date
 
 	static const uint8_t DS1307Address;
 	static const uint8_t MCP7941xAddress;

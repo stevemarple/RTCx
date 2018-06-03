@@ -5,6 +5,27 @@
 #define SECS_PER_DAY 86400L
 #define SECS_PER_4_YEARS (SECS_PER_DAY * (366L + 365L + 365L + 365L))
 
+
+// Day of week calculation needs to know the starting condition
+#if (RTCX_EPOCH - 1970) % 28 == 0
+const uint8_t RTCx::epochDow = 4;  // Thursday
+#elif (RTCX_EPOCH - 1970) % 28 == 4
+const uint8_t RTCx::epochDow = 2;  // Tuesday
+#elif (RTCX_EPOCH - 1970) % 28 == 8
+const uint8_t RTCx::epochDow = 0;  // Sunday
+#elif (RTCX_EPOCH - 1970) % 28 == 12
+const uint8_t RTCx::epochDow = 5;  // Friday
+#elif (RTCX_EPOCH - 1970) % 28 == 16
+const uint8_t RTCx::epochDow = 3;  // Wednesday
+#elif (RTCX_EPOCH - 1970) % 28 == 20
+const uint8_t RTCx::epochDow = 1;  // Monday
+#elif (RTCX_EPOCH - 1970) % 28 == 24
+const uint8_t RTCx::epochDow = 6;  // Saturday
+#else
+#error epochDow not defined
+#endif
+
+
 const uint8_t RTCx::DS1307Address = 0x68;
 const uint8_t RTCx::MCP7941xAddress = 0x6F;
 const uint8_t RTCx::MCP7941xEepromAddress = 0x57;
@@ -117,7 +138,7 @@ RTCx::time_t RTCx::mktime(struct tm *tm)
 
 	// Compute day of week
 	uint32_t daysSinceEpoch = (t / SECS_PER_DAY);
-	tm->tm_wday = (daysSinceEpoch + 4) % 7; // 1970-01-01 was Thursday (day 4)
+	tm->tm_wday = (daysSinceEpoch + epochDow) % 7; // 1970-01-01 was Thursday (day 4)
 	return t;
 }
 
@@ -170,7 +191,7 @@ struct RTCx::tm *RTCx::gmtime_r(const time_t *timep, struct tm *result)
 
 	// Compute day of week
 	uint16_t daysSinceEpoch = (*timep / 86400L);
-	result->tm_wday = (daysSinceEpoch + 4) % 7; // 1970-01-01 was Thursday (day 4)
+	result->tm_wday = (daysSinceEpoch + epochDow) % 7; // 1970-01-01 was Thursday (day 4)
 	return result;
 }
 

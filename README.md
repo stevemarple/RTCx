@@ -4,6 +4,11 @@ Arduino library to support DS1307 and similar I2C real-time
 clocks. The library can autoprobe to find the actual hardware based on
 I2C address.
 
+The library also provides equivalents to the Unix `mktime()` and `gmtime_r()` (a
+reentrant version of `gmtime()`). By default the Unix epoch of 1970-01-01 is used. 
+An alternative epoch can be defined at compile-time; it must differ from 1970 by an
+exact multiple of four years.
+
 ## Supported devices
 
 *  DS1307 (also DS1337, DS1338)
