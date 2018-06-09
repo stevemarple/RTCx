@@ -553,14 +553,6 @@ bool RTCx::adjustClock(RTCx::time_t offset) const
 }
 
 
-const __FlashStringHelper* RTCx::getDeviceName() const {
-	if (device > sizeof(deviceNames) / sizeof(deviceNames[0]))
-		return (__FlashStringHelper*)(F("unknown RTC"));
-	else
-		return (__FlashStringHelper*)(pgm_read_word(&(deviceNames[device])));
-}
-
-
 bool RTCx::setSQW(freq_t f) const
 {
 	switch (device) {
@@ -812,4 +804,11 @@ Stream& RTCx::printIsotime(Stream &s, const struct tm *tm)
 	isotime(tm, buffer, sizeof(buffer));
 	s.print(buffer);
 	return s;
+}
+
+const __FlashStringHelper* RTCx::getDeviceName(device_t device) {
+	if (device > sizeof(deviceNames) / sizeof(deviceNames[0]))
+		return (__FlashStringHelper*)(F("unknown RTC"));
+	else
+		return (__FlashStringHelper*)(pgm_read_word(&(deviceNames[device])));
 }

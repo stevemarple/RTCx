@@ -108,7 +108,9 @@ public:
 	static Stream& printIsotime(Stream &s, const time_t &t);
 	inline static Stream& printIsotime(Stream &s, const struct tm &tm);
 	static Stream& printIsotime(Stream &s, const struct tm *tm);
+	static const __FlashStringHelper* getDeviceName(device_t device);
 
+	
 	RTCx(void);
 	RTCx(uint8_t a);
 	RTCx(uint8_t a, device_t d);
@@ -137,7 +139,10 @@ public:
 	inline void setAddress(uint8_t a);
 	inline device_t getDevice(void) const;
 	inline void setDevice(device_t d);
-	const __FlashStringHelper* getDeviceName() const;
+	inline const __FlashStringHelper* getDeviceName(void) const {
+		return getDeviceName(device);
+	}
+
 	bool setSQW(freq_t f) const;
 
 	// Functions for MCP7941x
