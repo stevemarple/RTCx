@@ -37,10 +37,19 @@ const char RTCx::PCF85263Str[] PROGMEM = "PCF85263";
 // Device names must be ordered according to their device_t enum value.
 PGM_P const RTCx::deviceNames[] PROGMEM = {RTCx::DS1307Str, RTCx::MCP7941xStr, RTCx::PCF85263Str};
 
-// The address used by the DS1307 is also used by other devices (eg
-// MCP3424 ADC) so test for DS1307 last.
-const RTCx::device_t RTCx::autoprobeDeviceList[3] = {MCP7941x, PCF85263, DS1307};
-const uint8_t RTCx::autoprobeDeviceAddresses[3] = {MCP7941xAddress, PCF85263Address, DS1307Address};
+// The addresses used by the DS1307 and MCP7941x are also used by
+// other devices (eg MCP3424 ADC) so test for these last.
+const RTCx::device_t RTCx::autoprobeDeviceList[RTCX_NUM_SUPPORTED_DEVICES] = {
+	PCF85263,
+	DS1307,
+	MCP7941x,
+};
+const uint8_t RTCx::autoprobeDeviceAddresses[RTCX_NUM_SUPPORTED_DEVICES] = {
+	PCF85263Address,
+	DS1307Address,
+	MCP7941xAddress,
+};
+
 
 RTCx rtc;
 

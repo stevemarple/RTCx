@@ -32,13 +32,19 @@
 class RTCx;
 extern RTCx rtc;
 
+#define RTCX_NUM_SUPPORTED_DEVICES 3
+
 class RTCx {
 public:
 	enum device_t {
 		DS1307 = 0, // Include compatible devices (eg DS1337, DS1338)
 		MCP7941x = 1,
 		PCF85263 = 2,
+		// If adding more devices remember to update
+		// RTCX_NUM_SUPPORTED_DEVICES.
 	};
+
+
 
 	enum timeFunc_t {
 		TIME = 0,
