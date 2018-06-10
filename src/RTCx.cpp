@@ -672,7 +672,7 @@ int8_t RTCx::getCalibration(void) const
 			// Convert from signed magnitude to two's complement.
 			uint8_t d = readData(0x08);
 			int8_t r = d & 0x7Fu;
-			return (d & 0x80u ? -r : r);
+			return ((d & 0x80u) ? -r : r);
 		}
 		break;
 
