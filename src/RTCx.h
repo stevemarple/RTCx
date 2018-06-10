@@ -1,7 +1,7 @@
 #ifndef RTCX_h
 #define RTCX_h
 
-#define RTCX_VERSION "1.1.4"
+#define RTCX_VERSION "1.1.5"
 
 
 #if defined(__GNUC__) || defined(__clang__)
