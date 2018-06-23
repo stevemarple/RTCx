@@ -223,4 +223,5 @@ inline Stream& RTCx::printIsotime(Stream &s, const struct tm &tm)
 	return printIsotime(s, &tm);
 }
 
+#undef DEPRECATED
 #endif
