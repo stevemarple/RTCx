@@ -819,5 +819,5 @@ const __FlashStringHelper* RTCx::getDeviceName(device_t device) {
 	if (device > sizeof(deviceNames) / sizeof(deviceNames[0]))
 		return (__FlashStringHelper*)(F("unknown RTC"));
 	else
-		return (__FlashStringHelper*)(pgm_read_word(&(deviceNames[device])));
+		return (__FlashStringHelper*)(pgm_read_ptr(&(deviceNames[device])));
 }
