@@ -39,8 +39,8 @@ void setup(void)
 	else
 		Serial.begin(9600);
 	Wire.begin();
-
-	// Autoprobe to find a real-time clock.
+	Serial.println();
+	Serial.println("Autoprobing for a RTC...");
 	if (rtc.autoprobe()) {
 		// Found something, hopefully a clock.
 		Serial.print("Autoprobe found ");
