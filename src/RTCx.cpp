@@ -294,15 +294,15 @@ void RTCx::init(void) const
 		// Set various sensible defaults, including enabling battery
 		// backup and zeroing the calibration.
 		Wire.beginTransmission(address);
-		Wire.write(0x23); // Start register
-		Wire.write(0x00); // 0x23
-		Wire.write(0x00); // 0x24 Two's complement offset value
-		Wire.write(0x12); // 0x25 Normal offset correction, enable low-jitter mode, set load caps to 12.5pF
-		Wire.write(0x00); // 0x26 Battery switch reg, same as after a reset
-		Wire.write(0x00); // 0x27 Enable CLK pin, using bits set in reg 0x28
-		Wire.write(0x07); // 0x28 Realtime clock mode, no periodic interrupts, CLK pin off
-		Wire.write(0x00); // 0x29
-		Wire.write(0x00); // 0x2a
+		Wire.write((uint8_t)0x23); // Start register
+		Wire.write((uint8_t)0x00); // 0x23
+		Wire.write((uint8_t)0x00); // 0x24 Two's complement offset value
+		Wire.write((uint8_t)0x12); // 0x25 Normal offset correction, enable low-jitter mode, set load caps to 12.5pF
+		Wire.write((uint8_t)0x00); // 0x26 Battery switch reg, same as after a reset
+		Wire.write((uint8_t)0x00); // 0x27 Enable CLK pin, using bits set in reg 0x28
+		Wire.write((uint8_t)0x07); // 0x28 Realtime clock mode, no periodic interrupts, CLK pin off
+		Wire.write((uint8_t)0x00); // 0x29
+		Wire.write((uint8_t)0x00); // 0x2a
 		Wire.endTransmission();
 	}
 	else {
@@ -478,11 +478,11 @@ bool RTCx::setClock(const struct tm *tm, timeFunc_t func) const
 		if (device == PCF85263) {
 			// Stop clock and clear prescaler in one operation
 			Wire.beginTransmission(address);
-			Wire.write(0x2e);
-			Wire.write(1); // 0x2e Stop the clock
-			Wire.write(0xa4); // 0x2f STOP
+			Wire.write((uint8_t)0x2e);
+			Wire.write((uint8_t)1); // 0x2e Stop the clock
+			Wire.write((uint8_t)0xa4); // 0x2f STOP
 			// Register wraps round to 0x00
-			Wire.write(0); // Clear hundredths of seconds
+			Wire.write((uint8_t)0); // Clear hundredths of seconds
 			// Now ready to write seconds
 			// Wire.endTransmission();
 		}
