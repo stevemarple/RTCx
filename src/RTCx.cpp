@@ -5,6 +5,11 @@
 #define SECS_PER_DAY 86400L
 #define SECS_PER_4_YEARS (SECS_PER_DAY * (366L + 365L + 365L + 365L))
 
+#ifdef ARDUINO_ARCH_AVR
+#define SNPRINTF snprintf_P
+#else
+#define SNPRINTF snprintf
+#endif
 
 // Day of week calculation needs to know the starting condition
 #if (RTCX_EPOCH - 1970) % 28 == 0
@@ -789,7 +794,7 @@ bool RTCx::readTimeSaver(struct tm *tm, uint8_t reg, uint8_t sz) const
 
 int RTCx::isotime(const struct tm *tm, char *buffer, size_t len)
 {
-	return snprintf_P(buffer, len, PSTR("%04d-%02d-%02dT%02d:%02d:%02d"),
+	return SNPRINTF(buffer, len, PSTR("%04d-%02d-%02dT%02d:%02d:%02d"),
 					  tm->tm_year + 1900,
 					  tm->tm_mon + 1,
 					  tm->tm_mday,
@@ -815,9 +820,14 @@ Stream& RTCx::printIsotime(Stream &s, const struct tm *tm)
 	return s;
 }
 
-const __FlashStringHelper* RTCx::getDeviceName(device_t device) {
+RTCX_CONST_STRING_T* RTCx::getDeviceName(device_t device) {
 	if (device > sizeof(deviceNames) / sizeof(deviceNames[0]))
-		return (__FlashStringHelper*)(F("unknown RTC"));
-	else
-		return (__FlashStringHelper*)(pgm_read_ptr(&(deviceNames[device])));
+		return (RTCX_CONST_STRING_T*)(F("unknown RTC"));
+	else {
+#ifdef ARDUINO_ARCH_AVR
+		return (RTCX_CONST_STRING_T*)(pgm_read_ptr(&(deviceNames[device])));
+#else
+		return deviceNames[device];
+#endif
+	}
 }

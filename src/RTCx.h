@@ -34,6 +34,12 @@ extern RTCx rtc;
 
 #define RTCX_NUM_SUPPORTED_DEVICES 3
 
+#ifdef ARDUINO_ARCH_AVR
+#define RTCX_CONST_STRING_T const __FlashStringHelper
+#else
+#define RTCX_CONST_STRING_T const char
+#endif
+
 class RTCx {
 public:
 	enum device_t {
@@ -114,7 +120,7 @@ public:
 	static Stream& printIsotime(Stream &s, const time_t &t);
 	inline static Stream& printIsotime(Stream &s, const struct tm &tm);
 	static Stream& printIsotime(Stream &s, const struct tm *tm);
-	static const __FlashStringHelper* getDeviceName(device_t device);
+	static RTCX_CONST_STRING_T* getDeviceName(device_t device);
 
 	
 	RTCx(void);
@@ -145,7 +151,7 @@ public:
 	inline void setAddress(uint8_t a);
 	inline device_t getDevice(void) const;
 	inline void setDevice(device_t d);
-	inline const __FlashStringHelper* getDeviceName(void) const {
+	inline RTCX_CONST_STRING_T* getDeviceName(void) const {
 		return getDeviceName(device);
 	}
 
